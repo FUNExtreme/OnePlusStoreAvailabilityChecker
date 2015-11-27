@@ -1,6 +1,9 @@
 # OnePlusStoreAvailabilityChecker
 OnePlus Store Availability Checker
 
+## Download
+https://github.com/FUNExtreme/OnePlusStoreAvailabilityChecker/releases
+
 ## How to use
 * Go to a OnePlus product item page, for example: https://oneplus.net/be_nl/the-basics-plus-bundle
 * In the URL bar, you will see an icon that looks similar to the OnePlus logo.
