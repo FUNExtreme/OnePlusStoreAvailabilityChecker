@@ -17,14 +17,6 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab)
 			    if(~onePlusStoreAvailabilityUrls.indexOf(tab.url))
 			    {
 			    	console.log("OnePlus page detected");
-				    // It's a OnePlus page, get current tab and start our script
-					var queryInfo = 
-					{
-					   	active: true,
-					    currentWindow: true
-					};
-
-				    console.log("Injecting script");
 
 				    chrome.tabs.executeScript(tab.id, 
 				    {
@@ -32,9 +24,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab)
 				    }, function() 
 				    {
 				        if (chrome.runtime.lastError) 
-				        {
-				            console.error(chrome.runtime.lastError.message);
-				        }
+				        	console.error(chrome.runtime.lastError.message);
 				    });
 				}
 			});
