@@ -1,53 +1,128 @@
-// Copyright (c) 2014 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Global variables
+var asyncRetrievalStatus;
+var onePlusStoreAvailabilityUrls;
+var currentTab;
+var $startButton;
+var $stopButton;
+var $urlList;
 
 /**
  * Get the current URL.
  *
- * @param {function(string)} callback - called when the URL of the current tab
- *   is found.
+ * @param {function(string)} callback - called when the current tab is found.
  */
-function getCurrentTabUrl(callback) {
-  // Query filter to be passed to chrome.tabs.query - see
-  // https://developer.chrome.com/extensions/tabs#method-query
+function getCurrentTab(callback) 
+{
   var queryInfo = {
     active: true,
     currentWindow: true
   };
 
   chrome.tabs.query(queryInfo, function(tabs) {
-    var tab = tabs[0];
-    var url = tab.url;
-    callback(url);
+    callback(tabs[0]);
   });
 }
 
+/**
+ * Enable the buttons when we have our required info.
+ */
+function enableButtonsIfApplicable()
+{
+  // asyncRetrievalStatus is 2 when both the availabilityurls and current tab have been retrieved async
+  if(asyncRetrievalStatus == 2)
+  {
+    if(~onePlusStoreAvailabilityUrls.indexOf(currentTab.url))
+    {
+      $stopButton.disabled = false;
+      $startButton.disabled = true;
+    }
+    else
+    {
+      $startButton.disabled = false;
+      $stopButton.disabled = true;
+    }
+  }
+}
+
+/**
+ * Display the availability urls in a list
+ */
+function updateVisualUrlList()
+{
+  if(onePlusStoreAvailabilityUrls.length == 0)
+    $urlList.innerHTML = 'None';
+  else
+  {
+    $urlList.innerHTML = '';
+    for(var i = 0; i < onePlusStoreAvailabilityUrls.length; i++) {
+      var listItem = document.createElement('li');
+      listItem.appendChild(document.createTextNode(onePlusStoreAvailabilityUrls[i]));
+      $urlList.appendChild(listItem);
+    }
+  }
+
+  // If the list of urls change, we might also need to change our buttons
+  enableButtonsIfApplicable();
+}
+
+/**
+ * Listen for DOMContentLoaded event.
+ */
 document.addEventListener('DOMContentLoaded', function() 
 {
-  document.getElementById('start').addEventListener('click', function() 
+  // Set default values
+  asyncRetrievalStatus = 0;
+  onePlusStoreAvailabilityUrls = [];
+  currentTab = null;
+
+  // Get our buttons
+  $startButton = document.getElementById('start');
+  $stopButton = document.getElementById('stop');
+  $urlList = document.getElementById('urls');
+
+  // Disable the buttons until we have our information
+  $startButton.disabled = true;
+  $stopButton.disabled = true;
+
+  // Retreive the urls we are already checking for availability
+  chrome.storage.local.get({onePlusStoreAvailabilityUrls: []}, function (result) 
   {
-    getCurrentTabUrl(function(url) 
+    onePlusStoreAvailabilityUrls = result.onePlusStoreAvailabilityUrls;
+    asyncRetrievalStatus ++;
+
+    updateVisualUrlList();
+    enableButtonsIfApplicable();
+  });
+
+  // Get the current tab url
+  getCurrentTab(function(tab)
+  {
+    currentTab = tab;
+    asyncRetrievalStatus ++;
+
+    enableButtonsIfApplicable();
+  });
+
+  // Listen for start and stop button clicks
+  $startButton.addEventListener('click', function() 
+  {
+    // Add current tab url to the check list
+    onePlusStoreAvailabilityUrls.push(currentTab.url);
+    chrome.storage.local.set({onePlusStoreAvailabilityUrls: onePlusStoreAvailabilityUrls}, function() 
     {
-      chrome.storage.local.get({onePlusStoreAvailabilityUrls: []}, function (result) 
-      {
-        var onePlusStoreAvailabilityUrls = result.onePlusStoreAvailabilityUrls;
-        onePlusStoreAvailabilityUrls.push(url);
-        chrome.storage.local.set({onePlusStoreAvailabilityUrls: onePlusStoreAvailabilityUrls});
-      });
+      updateVisualUrlList();
+      chrome.tabs.reload(currentTab.id);
     });
   });
   
-  document.getElementById('stop').addEventListener('click', function() 
+  $stopButton.addEventListener('click', function() 
   {
-    getCurrentTabUrl(function(url) 
+    // Remove current tab url from check list
+    onePlusStoreAvailabilityUrls.splice(onePlusStoreAvailabilityUrls.indexOf(currentTab.url), 1);
+    chrome.storage.local.set({onePlusStoreAvailabilityUrls: onePlusStoreAvailabilityUrls}, function() 
     {
-      chrome.storage.local.get({onePlusStoreAvailabilityUrls: []}, function (result) 
-      {
-        var onePlusStoreAvailabilityUrls = result.onePlusStoreAvailabilityUrls;
-        onePlusStoreAvailabilityUrls.splice(onePlusStoreAvailabilityUrls.indexOf(url), 1);
-        chrome.storage.local.set({onePlusStoreAvailabilityUrls: onePlusStoreAvailabilityUrls});
-      });
-    });
+      updateVisualUrlList();
+      chrome.tabs.reload(currentTab.id);
+    });    
   });
 });

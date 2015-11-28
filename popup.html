@@ -9,12 +9,44 @@
     <title>OnePlus Store Availability Checker</title>
     
     <style>
+      html {
+        max-width: 100%;
+        width: 300px;
+      }
 
+      button {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+        font-weight: bold;
+        text-transform: uppercase;
+        padding: 10px 15px;
+        color: #555;
+        border: 0 none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      button:disabled {
+        background-color: #ccc !important;
+        color: white;
+      }
+      #start {
+        background-color: #A9D63F;
+      }
+      #stop {
+        background-color: #F03118;
+      }
     </style> 
   </head>
   <body>
-    <button id="start" type="button">Start checking availability</button>
-    <button id="stop" type="button">Stop checking availability</button>
+    <div class="buttons">
+      <button id="start" type="button">Start checking availability</button>
+      <button id="stop" type="button">Stop checking availability</button>
+    </div>
+    <div>
+      <p>Currently checking the following URLs:</p>
+      <ul id="urls"></ul>
+    </div>
   </body>
 
   <script src="popup.js"></script>
